@@ -184,15 +184,20 @@ export default function Home() {
               <div>
                 <h4 className="font-extrabold text-gray-900 text-lg leading-tight">{ex.name}</h4>
                 <div className="mt-2 flex items-center gap-3">
-                   <div className="flex flex-col">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase">Sets x Reps</span>
-                      <span className="text-gray-800 font-bold text-md">{ex.sets} x {ex.reps}</span>
-                   </div>
-                   <div className="h-6 w-px bg-gray-200"></div>
-                   <div className="flex flex-col">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">Sets x Reps</span>
+                    <span className="text-gray-800 font-bold text-md">{ex.sets} x {ex.reps}</span>
+                  </div>
+                  <div className="h-6 w-px bg-gray-200"></div>
+                  <div className="flex flex-col">
                       <span className="text-[10px] text-gray-400 font-bold uppercase">Weight</span>
                       <span className="text-gray-800 font-bold text-md">{ex.weight} {ex.unit}</span>
-                   </div>
+                  </div>
+                  <div className="h-6 w-px bg-gray-200"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">Training Volume</span>
+                    <span className="text-gray-800 font-bold text-md">{ex.weight * ex.reps * ex.sets} {ex.unit}</span>
+                  </div>
                 </div>
               </div>
 
