@@ -160,6 +160,10 @@ export default function Home() {
                   <span className="rounded-md bg-orange-50 px-2 py-0.5 text-orange-700 font-medium">
                     {ex.weight}{ex.unit}
                   </span>
+
+                  <span className="rounded-md bg-orange-50 px-2 py-0.5 text-green-700 font-medium">
+                    Training Volume {ex.sets * ex.reps * ex.weight}{ex.unit}
+                  </span>
                 </div>
                 <p className="mt-1 text-xs text-gray-400">{ex.date}</p>
               </div>
