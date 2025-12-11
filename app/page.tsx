@@ -33,8 +33,6 @@ export default function Home() {
     form.querySelector<HTMLInputElement>('input[name="weight"]')!.value = "";
     form.querySelector<HTMLInputElement>('input[name="sets"]')!.value = "";
     form.querySelector<HTMLInputElement>('input[name="reps"]')!.value = "";
-    form.querySelector<HTMLInputElement>('input[name="day"]')!.value = "Day 1";
-    form.querySelector<HTMLInputElement>('input[name="week"]')!.value = "1";
     
     await refreshData();
     setLoading(false);
