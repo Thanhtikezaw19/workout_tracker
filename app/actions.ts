@@ -3,7 +3,9 @@
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
-// 1. Define the interface
+const BIN_ID = process.env.JSONBIN_BIN_ID;
+const API_KEY = process.env.JSONBIN_API_KEY;
+
 export interface Exercise {
   id: number;
   week: number;
@@ -20,10 +22,7 @@ interface DataRecord {
   [email: string]: Exercise[];
 }
 
-const BIN_ID = process.env.JSONBIN_BIN_ID;
-const API_KEY = process.env.JSONBIN_API_KEY;
-
-// Helper to fetch without caching
+// Helper to fetch fresh data
 async function fetchJsonBin() {
   const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
     headers: { 'X-Master-Key': API_KEY as string },
@@ -36,7 +35,6 @@ async function fetchJsonBin() {
 export async function getData(): Promise<Exercise[]> {
   const session = await getServerSession();
   if (!session?.user?.email) return [];
-
   try {
     const json = await fetchJsonBin();
     const record = json.record as DataRecord;
@@ -50,29 +48,27 @@ export async function getData(): Promise<Exercise[]> {
 export async function addExercise(formData: FormData) {
   const session = await getServerSession();
   if (!session?.user?.email) return;
+
   const userEmail = session.user.email;
 
-  console.log("--- SERVER ACTION (NEW VERSION) STARTED ---");
+  // --- DEBUGGING VALUES ---
+  const rawWeek = formData.get('week');
+  const rawDay = formData.get('day');
+  console.log("SERVER RECEIVED -> Week:", rawWeek, "Day:", rawDay);
 
-  // 1. Force extraction as Strings first
-  const weekStr = formData.get('week') as string;
-  const dayStr = formData.get('day') as string;
-  
-  // 2. Convert cleanly
-  const weekInt = parseInt(weekStr) || 1;
-  const dayFinal = dayStr || "Day 1";
+  // Parse values safely. If "week" is missing, we set it to 1.
+  const weekInt = rawWeek ? parseInt(rawWeek.toString()) : 1;
+  const dayStr = rawDay ? rawDay.toString() : "Day 1";
 
-  console.log(`PREPARING TO SAVE -> Week: ${weekInt}, Day: ${dayFinal}`);
-
-  // 3. Fetch current data
+  // 1. Get current data
   const json = await fetchJsonBin();
-  const record = json.record as DataRecord; // Current Data
+  const record = json.record as DataRecord;
 
-  // 4. Create new object
+  // 2. Create the new object
   const newExercise: Exercise = {
     id: Date.now(),
-    week: weekInt,  // <--- Explicitly set here
-    day: dayFinal,  // <--- Explicitly set here
+    week: weekInt,  // <--- This is what gets saved
+    day: dayStr,
     name: formData.get('name') as string,
     sets: Number(formData.get('sets')),
     reps: Number(formData.get('reps')),
@@ -81,30 +77,27 @@ export async function addExercise(formData: FormData) {
     date: new Date().toLocaleDateString(),
   };
 
-  // 5. Append to record
+  // 3. Add to list
   if (!record[userEmail]) record[userEmail] = [];
   record[userEmail].push(newExercise);
 
-  console.log("OBJECT BEING SAVED:", JSON.stringify(newExercise));
-
-  // 6. Save to JSONBin (Overwrite)
+  // 4. Save to JSONBin (Overwrite)
   const saveRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'X-Master-Key': API_KEY as string
     },
-    body: JSON.stringify(record) // We send the updated record back
+    body: JSON.stringify(record)
   });
 
   if (!saveRes.ok) {
-    console.error("JSONBIN SAVE FAILED", await saveRes.text());
+    console.error("SAVE FAILED:", await saveRes.text());
   } else {
-    console.log("JSONBIN SAVE SUCCESS");
+    console.log("SAVE SUCCESS");
   }
 
-  // 7. Force UI Refresh
-  revalidatePath('/'); 
+  revalidatePath('/');
 }
 
 export async function deleteExercise(id: number) {
@@ -116,7 +109,7 @@ export async function deleteExercise(id: number) {
   const record = json.record as DataRecord;
 
   if (record[userEmail]) {
-    record[userEmail] = record[userEmail].filter((ex: Exercise) => ex.id !== id);
+    record[userEmail] = record[userEmail].filter((ex) => ex.id !== id);
   }
 
   await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
