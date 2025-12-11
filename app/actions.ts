@@ -67,6 +67,7 @@ export async function addExercise(formData: FormData) {
   const day = rawDay ? (rawDay as string) : "Day 1";
 
   // 3. Create new object
+  console.log("Everygoing to add exercise for week:", week, "day:", day);
   const newExercise: Exercise = {
     id: Date.now(),
     week: week,    // Saving the week
@@ -84,6 +85,8 @@ export async function addExercise(formData: FormData) {
     record[userEmail] = [];
   }
   record[userEmail].push(newExercise);
+
+  console.log("Record after addition:", record[userEmail]);
 
   await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
     method: 'PUT',
