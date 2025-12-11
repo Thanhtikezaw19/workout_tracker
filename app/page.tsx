@@ -119,19 +119,6 @@ export default function Home() {
                 className="w-full rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
               />
             </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex-[2]">
-              <label className="mb-1 block text-xs text-gray-400">Weight</label>
-              <input
-                name="weight"
-                type="number"
-                placeholder="0"
-                required
-                className="w-full rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-400 p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-              />
-            </div>
             <div className="flex-1">
               <label className="mb-1 block text-xs text-gray-400">Unit</label>
               <select
