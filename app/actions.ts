@@ -80,6 +80,7 @@ export async function addExercise(formData: FormData) {
   // 3. Add to list
   if (!record[userEmail]) record[userEmail] = [];
   record[userEmail].push(newExercise);
+  alert (" Records" + JSON.stringify(record[userEmail]));
 
   // 4. Save to JSONBin (Overwrite)
   const saveRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
