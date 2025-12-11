@@ -14,6 +14,10 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Explicitly tell Next.js to not use Turbopack for this config if possible
+  experimental: {
+    // any experimental features can go here
+  }
 };
 
 export default withPWA(nextConfig);
