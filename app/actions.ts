@@ -2,11 +2,11 @@
 
 import { getServerSession } from "next-auth";
 
-// 1. Update the interface to include Week and Day
+// 1. Define the complete structure of your data
 export interface Exercise {
   id: number;
-  week: number;     // e.g., 1
-  day: string;      // e.g., "Day 1" or "Monday"
+  week: number;
+  day: string;
   name: string;
   sets: number;
   reps: number;
@@ -22,6 +22,7 @@ interface DataRecord {
 const BIN_ID = process.env.JSONBIN_BIN_ID;
 const API_KEY = process.env.JSONBIN_API_KEY;
 
+// READ DATA
 export async function getData(): Promise<Exercise[]> {
   const session = await getServerSession();
   if (!session?.user?.email) return [];
@@ -43,12 +44,14 @@ export async function getData(): Promise<Exercise[]> {
   }
 }
 
+// SAVE DATA
 export async function addExercise(formData: FormData) {
   const session = await getServerSession();
   if (!session?.user?.email) return;
 
   const userEmail = session.user.email;
 
+  // 1. Fetch current data
   const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
     headers: { 'X-Master-Key': API_KEY as string },
     cache: 'no-store'
@@ -56,11 +59,18 @@ export async function addExercise(formData: FormData) {
   const json = await res.json();
   const record = json.record as DataRecord;
 
-  // 2. Extract Week and Day from the form
+  // 2. Parse inputs with fallbacks
+  const rawWeek = formData.get('week');
+  const week = rawWeek ? Number(rawWeek) : 1;
+  
+  const rawDay = formData.get('day');
+  const day = rawDay ? (rawDay as string) : "Day 1";
+
+  // 3. Create new object
   const newExercise: Exercise = {
     id: Date.now(),
-    week: Number(formData.get('week')),
-    day: formData.get('day') as string,
+    week: week,    // Saving the week
+    day: day,      // Saving the day
     name: formData.get('name') as string,
     sets: Number(formData.get('sets')),
     reps: Number(formData.get('reps')),
@@ -69,6 +79,7 @@ export async function addExercise(formData: FormData) {
     date: new Date().toLocaleDateString(),
   };
 
+  // 4. Update and Save
   if (!record[userEmail]) {
     record[userEmail] = [];
   }
@@ -84,9 +95,11 @@ export async function addExercise(formData: FormData) {
   });
 }
 
+// DELETE DATA
 export async function deleteExercise(id: number) {
   const session = await getServerSession();
   if (!session?.user?.email) return;
+
   const userEmail = session.user.email;
 
   const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {

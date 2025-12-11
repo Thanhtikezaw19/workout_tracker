@@ -10,16 +10,13 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [filterWeek, setFilterWeek] = useState<string>("all");
 
-  // Load data on login
+  // Load data
   useEffect(() => {
-    if (session) {
-      refreshData();
-    }
+    if (session) refreshData();
   }, [session]);
 
   const refreshData = async () => {
     const data = await getData();
-    // Sort: Newest created first
     setExercises(data.reverse());
   };
 
@@ -27,9 +24,10 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
+    
     await addExercise(formData);
-    // Note: We don't reset the form fully so user can add multiple exercises for the same day easily
-    // We only clear the exercise name/sets/reps/weight
+    
+    // Only clear specific fields so you can quickly add more exercises for the same day
     const form = e.target as HTMLFormElement;
     form.querySelector<HTMLInputElement>('input[name="name"]')!.value = "";
     form.querySelector<HTMLInputElement>('input[name="weight"]')!.value = "";
@@ -45,13 +43,13 @@ export default function Home() {
     await refreshData();
   };
 
-  // Get unique weeks for the filter dropdown
+  // Get unique weeks for filter
   const uniqueWeeks = useMemo(() => {
-    const weeks = exercises.map(ex => ex.week).filter(Boolean);
+    // Only take weeks that are valid numbers
+    const weeks = exercises.map(ex => ex.week).filter(w => w > 0);
     return Array.from(new Set(weeks)).sort((a, b) => a - b);
   }, [exercises]);
 
-  // Filter the list based on selection
   const filteredExercises = exercises.filter(ex => {
     if (filterWeek === "all") return true;
     return ex.week === Number(filterWeek);
@@ -72,8 +70,6 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-md p-4 pb-24 min-h-screen bg-gray-50">
-      
-      {/* Header */}
       <header className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">Hi, {session.user?.name?.split(' ')[0]}</h2>
         <button onClick={() => signOut()} className="text-sm font-medium text-gray-500 hover:text-red-500">
@@ -81,19 +77,20 @@ export default function Home() {
         </button>
       </header>
 
-      {/* Input Form */}
       <section className="mb-8 rounded-2xl bg-white p-5 shadow-sm border border-gray-200">
         <h3 className="mb-4 font-semibold text-gray-800">Log Workout</h3>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           
-          {/* Row 1: Week and Day */}
+          {/* Week and Day Inputs */}
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-xs font-bold text-gray-600">Week #</label>
-              <input name="week" type="number" defaultValue="1" required className="w-full rounded-lg border border-gray-300 bg-white text-gray-900 p-3 outline-none focus:border-blue-500" />
+              {/* Note: name="week" matches formData.get('week') in actions.ts */}
+              <input name="week" type="number" defaultValue="1" min="1" required className="w-full rounded-lg border border-gray-300 bg-white text-gray-900 p-3 outline-none focus:border-blue-500" />
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-xs font-bold text-gray-600">Day</label>
+              {/* Note: name="day" matches formData.get('day') in actions.ts */}
               <select name="day" className="w-full rounded-lg border border-gray-300 bg-white text-gray-900 p-3 outline-none focus:border-blue-500">
                 <option value="Day 1">Day 1</option>
                 <option value="Day 2">Day 2</option>
@@ -106,13 +103,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Row 2: Exercise Name */}
           <div>
             <label className="mb-1 block text-xs font-bold text-gray-600">Exercise</label>
             <input name="name" type="text" placeholder="e.g. Hammer Curl" required className="w-full rounded-lg border border-gray-300 bg-white text-gray-900 p-3 outline-none focus:border-blue-500" />
           </div>
           
-          {/* Row 3: Sets and Reps */}
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-xs font-bold text-gray-600">Sets</label>
@@ -124,7 +119,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Row 4: Weight */}
           <div className="flex gap-3">
             <div className="flex-[2]">
               <label className="mb-1 block text-xs font-bold text-gray-600">Weight</label>
@@ -145,7 +139,6 @@ export default function Home() {
         </form>
       </section>
 
-      {/* Filter Section */}
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-bold text-gray-800 text-lg">History</h3>
         <select 
@@ -160,16 +153,9 @@ export default function Home() {
         </select>
       </div>
 
-      {/* Data List */}
       <div className="flex flex-col gap-3">
-        {filteredExercises.length === 0 && (
-          <p className="text-center text-gray-400 py-8 italic">No exercises found for this filter.</p>
-        )}
-        
         {filteredExercises.map((ex) => (
           <div key={ex.id} className="relative flex flex-col rounded-xl bg-white p-4 shadow-sm border border-gray-200">
-            
-            {/* Top Badge Row: Week & Day */}
             <div className="flex gap-2 mb-2">
               <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded-md">
                 Week {ex.week || 1}
@@ -178,18 +164,16 @@ export default function Home() {
                 {ex.day || "Day 1"}
               </span>
             </div>
-
-            {/* Exercise Details */}
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="font-extrabold text-gray-900 text-lg leading-tight">{ex.name}</h4>
                 <div className="mt-2 flex items-center gap-3">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase">Sets x Reps</span>
-                    <span className="text-gray-800 font-bold text-md">{ex.sets} x {ex.reps}</span>
-                  </div>
-                  <div className="h-6 w-px bg-gray-200"></div>
-                  <div className="flex flex-col">
+                   <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase">Sets x Reps</span>
+                      <span className="text-gray-800 font-bold text-md">{ex.sets} x {ex.reps}</span>
+                   </div>
+                   <div className="h-6 w-px bg-gray-200"></div>
+                   <div className="flex flex-col">
                       <span className="text-[10px] text-gray-400 font-bold uppercase">Weight</span>
                       <span className="text-gray-800 font-bold text-md">{ex.weight} {ex.unit}</span>
                   </div>
